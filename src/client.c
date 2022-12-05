@@ -1,8 +1,6 @@
 #include "client.h"
 
-ftp_info* ftp;
-
-int openSocket(const char* ip, int port) {
+int openSocket(ftp_info* ftp, const char* ip, int port) {
     int sockfd;
 
     struct sockaddr_in server_addr;
@@ -20,34 +18,36 @@ int openSocket(const char* ip, int port) {
     return sockfd;
 }
 
-int connectSocket(int socketfd) {
+int connectSocket(ftp_info* ftp, int socketfd) {
+    printf("before\n");
     if(connect(socketfd, (struct sockaddr*) &ftp->server_addr, sizeof(ftp->server_addr)) < 0) {
         perror("connect()");
         return -1;
     }
+    printf("connect\n");
 
     return 0;
 }
 
-int sendCommand(char* buf, size_t size) {
+int sendCommand(ftp_info* ftp, char* buf, size_t size) {
     int bytes = write(ftp->control_socket, buf, size);
 
     return bytes == size;
 }
 
-int readResponse(char* buf, size_t size) {
+int readResponse(ftp_info* ftp, char* buf, size_t size) {
     FILE* file = fdopen(ftp->control_socket, "r");
 
     do {
         memset(buf, 0, size);
         fgets(buf, size, file);
-    
-    } while(buf[3] != ' ');
+        printf("response = %s\n", buf);
+    } while(!('1' <= buf[0] && buf[0] <= '5') || buf[3] != ' ');
 
     return 0;
 }
 
-int getip(const char* hostname) {
+int getip(ftp_info* ftp, const char* hostname) {
 
     if((ftp->h = gethostbyname(hostname)) == NULL) {
         herror("gethostbyname()");
@@ -57,17 +57,17 @@ int getip(const char* hostname) {
     return 0;
 }
 
-int login(const char* user, const char* password) {
+int login(ftp_info* ftp, const char* user, const char* password) {
     char buf[1024];
 
     sprintf(buf, "USER %s\n", user);
 
-    if(sendCommand(buf, 1024) == -1) {
+    if(sendCommand(ftp, buf, 1024) == -1) {
         printf("Failed to send user\n");
         return -1;
     }
 
-    if(readResponse(buf, 1024) == -1) {
+    if(readResponse(ftp, buf, 1024) == -1) {
         printf("Failed to read user response\n");
         return -1;
     }
@@ -76,12 +76,12 @@ int login(const char* user, const char* password) {
 
     sprintf(buf, "PASS %s\n", password);
 
-    if(sendCommand(buf, 1024) == -1) {
+    if(sendCommand(ftp, buf, 1024) == -1) {
         printf("Failed to send password\n");
         return -1;
     }
 
-    if(readResponse(buf, 1024) == -1) {
+    if(readResponse(ftp, buf, 1024) == -1) {
         printf("Failed to read password response\n");
         return -1;
     }
@@ -89,16 +89,16 @@ int login(const char* user, const char* password) {
     return 0;
 }
 
-int cwd(const char* path) {
+int cwd(ftp_info* ftp, const char* path) {
     char buf[1024];
     sprintf(buf, "CWD %s\n", path);
 
-    if(sendCommand(buf, 1024) == -1) {
+    if(sendCommand(ftp, buf, 1024) == -1) {
         printf("Failed to change current working directory\n");
         return -1;
     }
 
-    if(readResponse(buf, 1024) == -1) {
+    if(readResponse(ftp, buf, 1024) == -1) {
         printf("Failed to read cwd response\n");
         return -1;
     }
@@ -106,24 +106,24 @@ int cwd(const char* path) {
     return 0;
 }
 
-int getFileSize(const char* filename) {
+int getFileSize(ftp_info* ftp, const char* filename) {
     char binary_mode[] = "TYPE I\n";
     char file_size[1024];
     char response[1024];
 
     sprintf(file_size, "SIZE %s\n", filename);
 
-    if(sendCommand(binary_mode, strlen(binary_mode)) == -1) {
+    if(sendCommand(ftp, binary_mode, strlen(binary_mode)) == -1) {
         printf("Failed to switch to binary mode\n");
         return -1;
     }
 
-    if(readResponse(response, 1024) == -1) {
+    if(readResponse(ftp, response, 1024) == -1) {
         printf("Failed to read switch to binary mode response\n");
         return -1;
     }
 
-    if(sendCommand(file_size, 1024) == -1) {
+    if(sendCommand(ftp, file_size, 1024) == -1) {
         printf("Failed to read get file size response\n");
         return -1;
     }
@@ -131,19 +131,19 @@ int getFileSize(const char* filename) {
     return 0;
 }
 
-int passiveMode() {
+int passiveMode(ftp_info* ftp) {
     char buf[] = "PASV\n";
     char response[1024];
     char ip[] = "\0"; 
 
     int ip1, ip2, ip3, ip4, port1, port2;
 
-    if(sendCommand(buf, strlen(buf)) == -1) {
+    if(sendCommand(ftp, buf, strlen(buf)) == -1) {
         printf("Failed to enter passive mode\n");
         return -1;
     }
 
-    if(readResponse(response, sizeof(response)) == -1) {
+    if(readResponse(ftp, response, sizeof(response)) == -1) {
         printf("Failed to read passive mode response\n");
         return -1;
     }
@@ -161,22 +161,22 @@ int passiveMode() {
 
     int port = 256 * port1 + port2;
 
-    ftp->data_socket = openSocket(ip, port);
+    ftp->data_socket = openSocket(ftp, ip, port);
 
     return 0;
 }
 
-int retrieve(const char* filename) {
+int retrieve(ftp_info* ftp, const char* filename) {
     char buf[1024];
     char response[1024];
     sprintf(buf, "RETR %s\n", filename);
 
-    if(sendCommand(buf, sizeof(buf)) == -1) {
+    if(sendCommand(ftp, buf, sizeof(buf)) == -1) {
         printf("Failed to send RETR command\n");
         return -1;
     }
 
-    if(readResponse(response, sizeof(response)) == -1) {
+    if(readResponse(ftp, response, sizeof(response)) == -1) {
         printf("Failed to read RETR response\n");
         return -1;
     }
@@ -184,7 +184,7 @@ int retrieve(const char* filename) {
     return 0;
 }
 
-int download(const char* filename) {
+int download(ftp_info* ftp, const char* filename) {
     FILE* file = fopen(filename, "w");
     int bytes, bytesWritten;
 
@@ -213,6 +213,6 @@ int download(const char* filename) {
     return 0;
 }
 
-int closeSocket() {
+int closeSocket(ftp_info* ftp) {
     return close(ftp->control_socket);
 }

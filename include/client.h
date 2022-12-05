@@ -19,17 +19,17 @@ typedef struct {
     int port;
 } ftp_info;
 
-int openSocket(const char* ip, int port);
-int connectSocket();
-int sendCommand(char* buf, size_t size);
-int readResponse(char* buf, size_t size);
-int getip(const char* hostname);
-int login(const char* user, const char* password);
-int cwd(const char* path);
-int getFileSize(const char* filename);
-int passiveMode();
-int retrieve(const char* filename);
-int download(const char* filename);
-int closeSocket();
+int openSocket(ftp_info* ftp, const char* ip, int port);
+int connectSocket(ftp_info* ftp, int socketfd);
+int sendCommand(ftp_info* ftp, char* buf, size_t size);
+int readResponse(ftp_info* ftp, char* buf, size_t size);
+int getip(ftp_info* ftp, const char* hostname);
+int login(ftp_info* ftp, const char* user, const char* password);
+int cwd(ftp_info* ftp, const char* path);
+int getFileSize(ftp_info* ftp, const char* filename);
+int passiveMode(ftp_info* ftp);
+int retrieve(ftp_info* ftp, const char* filename);
+int download(ftp_info* ftp, const char* filename);
+int closeSocket(ftp_info* ftp);
 
 #endif
