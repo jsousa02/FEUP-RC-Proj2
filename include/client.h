@@ -10,6 +10,8 @@
 #include <netdb.h>
 #include <string.h>
 
+#include "parser.h"
+
 typedef struct {
     int control_socket;
     int data_socket;
@@ -19,11 +21,11 @@ typedef struct {
     int port;
 } ftp_info;
 
-int openSocket(ftp_info* ftp, const char* ip, int port);
-int connectSocket(ftp_info* ftp, int socketfd);
+int openSocket(const char* ip, int port);
+int connectSocket(ftp_info* ftp, const char* ip, int port);
 int sendCommand(ftp_info* ftp, char* buf, size_t size);
 int readResponse(ftp_info* ftp, char* buf, size_t size);
-int getip(ftp_info* ftp, const char* hostname);
+int getip(url_parts* url);
 int login(ftp_info* ftp, const char* user, const char* password);
 int cwd(ftp_info* ftp, const char* path);
 int getFileSize(ftp_info* ftp, const char* filename);
@@ -31,5 +33,6 @@ int passiveMode(ftp_info* ftp);
 int retrieve(ftp_info* ftp, const char* filename);
 int download(ftp_info* ftp, const char* filename);
 int closeSocket(ftp_info* ftp);
+int disconnect(ftp_info* ftp);
 
 #endif
