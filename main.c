@@ -1,63 +1,80 @@
 #include <stdio.h>
-#include "include/client.h"
+
+#include "client.h"
+#include "parser.h"
 
 int main(int argc, char** argv) {
 
+    if(argc != 2) {
+        printf("Wrong number of arguments\n");
+        return -1;
+    }
+
+    url_parts components;
+
+    initParser(&components);
+
+    if(parseURL(argv[1], &components)) {
+        printf("Failed to parse URL\n");
+        return -1;
+    }
+
+    printf("Host: %s\nPath: %s\nFilename: %s\nUser: %s\nPassword: %s\n", components.host, components.path, components.filename, components.user, components.password);
+
     ftp_info ftp;
-    int sockfd;
 
-    if((sockfd = openSocket(&ftp, "193.137.29.15", 50826)) == -1) {
-        return -1;
-    }
-    printf("open socket\n");
+    getip(&components);
+    printf("IP: %s\n", components.ip);
 
-    if(connectSocket(&ftp, sockfd) == -1) {
+    if(connectSocket(&ftp, components.ip, components.port) == -1) {
         return -1;
     }
 
-    printf("connect socket\n");
+    const char* user = strlen(components.user) ? components.user : "anonymous";
+    
+    const char* pw = strlen(components.password) ? components.password: "anonymous@";
 
-    if(login(&ftp, "anonymous", "anonymous@") == -1) {
+    //printf("connect socket\n");
+
+    if(login(&ftp, user, pw) == -1) {
         return -1;
     }
 
-    printf("login\n");
+    //printf("login\n");
 
-    if(cwd(&ftp, "/pub/kodi") == -1) {
+    if(cwd(&ftp, components.path) == -1) {
         return -1;
     }
 
-    printf("cwd\n");
+    //printf("cwd\n");
 
-    if(getFileSize(&ftp, "timestamps.txt\n") == -1) {
-        return -1;
-    }
+    //if(getFileSize(&ftp, "timestamp.txt\n") == -1) {
+    //    return -1;
+    //}
 
-    printf("get file size\n");
+    //printf("get file size\n");
 
     if(passiveMode(&ftp) == -1) {
         return -1;
     }
 
-    printf("passive mode\n");
+    //printf("passive mode\n");
 
-    if(retrieve(&ftp, "timestamps.txt\n") == -1) {
+    if(retrieve(&ftp, components.filename) == -1) {
         return -1;
     }
 
-    printf("retrieve\n");
+    //printf("retrieve\n");
 
-    if(download(&ftp, "timestamps.txt\n") == -1) {
+    if(download(&ftp, components.filename) == -1) {
         return -1;
     }
 
-    printf("download\n");
+    //printf("download\n");
 
-    if(closeSocket(&ftp) == -1) {
-        return -1;
+    if(disconnect(&ftp) == -1) {
+        printf("Failed to disconnect\n");
     }
-
-    printf("close socket\n");
 
     return 0;
 }

@@ -11,12 +11,12 @@ BIN = bin/
 
 # Targets
 .PHONY: all
-all: $(BIN)/main
+all: $(BIN)/download
 
-$(BIN)/main: main.c $(SRC)/*.c
+$(BIN)/download: main.c $(SRC)/*.c
 	$(CC) $(CFLAGS) -o $@ $^ -I $(INCLUDE)
 
 .PHONY: clean
 clean:
-	rm -f $(BIN)/main
+	rm -f $(BIN)/download
 
