@@ -8,4 +8,5 @@ ether2 -> port 13
 /ip address print
 
 /ip route add dst-address=172.16.40.0/24 gateway=172.16.41.253
+/ip route add address=0.0.0.0/0 gateway=172.16.1.254
 /ip route print
