@@ -6,4 +6,4 @@ route add default gw 172.16.41.254
 route -n
 echo 0 > /proc/sys/net/ipv4/conf/eth0/accept_redirects
 echo 0 > /proc/sys/net/ipv4/conf/all/accept_redirects
-echo "services.netlab.fe.up.pt 172.16.1.1" > /etc/resolv.conf
+echo "mameserver 172.16.1.1" > /etc/resolv.conf
