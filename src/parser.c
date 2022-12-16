@@ -95,11 +95,3 @@ char* cutString(char* str, char chr) {
 
     return tmp;
 }
-
-/*
-
-list_size([], 0).
-list_size([H | T], S) :-    list_size(T, S1),
-                            S is S1 + 1.
-
-*/

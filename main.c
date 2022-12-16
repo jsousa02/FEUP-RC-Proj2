@@ -34,43 +34,25 @@ int main(int argc, char** argv) {
     
     const char* pw = strlen(components.password) ? components.password: "anonymous@";
 
-    //printf("connect socket\n");
-
     if(login(&ftp, user, pw) == -1) {
         return -1;
     }
-
-    //printf("login\n");
 
     if(cwd(&ftp, components.path) == -1) {
         return -1;
     }
 
-    //printf("cwd\n");
-
-    //if(getFileSize(&ftp, "timestamp.txt\n") == -1) {
-    //    return -1;
-    //}
-
-    //printf("get file size\n");
-
     if(passiveMode(&ftp) == -1) {
         return -1;
     }
-
-    //printf("passive mode\n");
 
     if(retrieve(&ftp, components.filename) == -1) {
         return -1;
     }
 
-    //printf("retrieve\n");
-
     if(download(&ftp, components.filename) == -1) {
         return -1;
     }
-
-    //printf("download\n");
 
     if(disconnect(&ftp) == -1) {
         printf("Failed to disconnect\n");

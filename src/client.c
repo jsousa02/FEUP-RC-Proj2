@@ -71,9 +71,6 @@ int getip(url_parts* url) {
     char addr[SIZE]; 
     inet_ntop(h->h_addrtype, h->h_addr_list[0], addr, SIZE);
     strcpy(url->ip, addr);
-    
-    //printf("IP: %s\n", addr);
-    //printf("host: %X\n", h->h_addr_list[0]);
 
     return 0;
 }
@@ -127,36 +124,6 @@ int cwd(ftp_info* ftp, const char* path) {
     return 0;
 }
 
-int getFileSize(ftp_info* ftp, const char* filename) {
-    char binary_mode[] = "TYPE I\n";
-    char file_size[1024];
-    char response[1024];
-
-    sprintf(file_size, "SIZE %s\n", filename);
-
-    if(sendCommand(ftp, binary_mode, strlen(binary_mode)) == -1) {
-        printf("Failed to switch to binary mode\n");
-        return -1;
-    }
-
-    if(readResponse(ftp, response, 1024) == -1) {
-        printf("Failed to read switch to binary mode response\n");
-        return -1;
-    }
-
-    if(sendCommand(ftp, file_size, 1024) == -1) {
-        printf("Failed to read get file size response\n");
-        return -1;
-    }
-
-    if(readResponse(ftp, response, 1024) == -1) {
-        printf("Failed to read switch to binary mode response\n");
-        return -1;
-    }
-
-    return 0;
-}
-
 int passiveMode(ftp_info* ftp) {
     char buf[] = "PASV\n";
     char response[1024];
@@ -187,7 +154,6 @@ int passiveMode(ftp_info* ftp) {
     }
 
     int port = 256 * port1 + port2;
-    //printf("ip: %s\n port: %d\n", ip, port);
 
     ftp->data_socket = openSocket(ip, port);
 
@@ -256,6 +222,11 @@ int disconnect(ftp_info* ftp) {
 
     if(sendCommand(ftp, cmd, strlen(cmd)) == -1) {
         printf("Failed to send QUIT command\n");
+        return -1;
+    }
+
+    if(readResponse(ftp, response, sizeof(response)) == -1) {
+        printf("Failed to read response\n");
         return -1;
     }
 
